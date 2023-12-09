@@ -10,12 +10,10 @@ def deriv(seq):
 
 def fill(seq):
     if not any(seq):
-        return (0, 0)
-    last_dx, sum_ = fill(deriv(seq))
-    new_val = seq[-1] + last_dx
-    return new_val, sum_ + new_val
+        return 0
+    return seq[-1] + fill(deriv(seq))
 
 
-print(sum(fill(s)[0] for s in seqs))
+print(sum(fill(s) for s in seqs))
 
-print(sum(fill(list(reversed(s)))[0] for s in seqs))
+print(sum(fill(s[::-1]) for s in seqs))
