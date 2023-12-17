@@ -3,36 +3,6 @@ import heapq
 from collections import Counter, defaultdict, deque
 
 
-# BFS, too slow for real input.
-def min_path(grid):
-    H, W = len(grid), len(grid[0])
-
-    # y x cost path
-    q = deque([(0, 0, 0, "")])
-    seen = {}
-
-    min_e = float("+inf")
-    while q:
-        y, x, cost, path = q.popleft()
-
-        if len(path) > 0 and Counter(path[-4:]).most_common()[0][1] > 3:
-            continue
-
-        if y == H - 1 and x == W - 1:
-            print("FOUND!!")
-
-        if seen.get((y, x), float("+inf")) < cost:
-            continue
-        seen[(y, x)] = cost
-
-        for dy, dx, dr in ((0, -1, "<"), (1, 0, "v"), (0, 1, ">"), (-1, 0, "^")):
-            ny, nx = y + dy, x + dx
-            if not (0 <= ny < H and 0 <= nx < W):
-                continue
-            q.append((ny, nx, cost + grid[ny][nx], path + dr))
-    return seen[(H - 1, W - 1)]
-
-
 OPPOSITE_DIR = {
     "v": "^",
     ">": "<",
