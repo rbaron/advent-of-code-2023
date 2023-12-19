@@ -10,47 +10,44 @@ def parse():
         PATT = re.compile(r"(\w+)\{(.+)}")
         name, rs = PATT.match(wf).groups()
 
-        def parse_rule(r):
+        # Each rule is (category, < or >, value, next if true, next if false)
+        def parse_rule(i, r):
             RULE_PATT = re.compile(r"(\w)([<>])(\d+):(\w+)")
             if ":" in r:
                 cat, op, v, nxt = RULE_PATT.match(r).groups()
-                return (cat, op, int(v), nxt)
+                return (f"{name}{i}", (cat, op, int(v), f"{nxt}0", f"{name}{i + 1}"))
             else:
-                return (None, None, None, r)
+                return (f"{name}{i}", (None, None, None, f"{r}0", None))
 
-        return name, [parse_rule(r) for r in rs.split(",")]
+        return [parse_rule(i, r) for i, r in enumerate(rs.split(","))]
 
     def parse_part(p):
         return [int(n) for n in re.findall(r"\d+", p)]
 
-    return dict(parse_wf(wf.strip()) for wf in wfs.split("\n")), [
+    return dict(rule for wf in wfs.split("\n") for rule in parse_wf(wf.strip())), [
         parse_part(p) for p in parts.split("\n")
     ]
 
 
-def apply_rule(part, rule):
-    cat, op, v, nxt = rule
+def apply_rule(part, name, rules):
+    if name in ["A0", "R0"]:
+        return name
+    cat, op, v, nxt_if, nxt_else = rules[name]
     if cat is None:
-        return nxt
+        return apply_rule(part, nxt_if, rules)
     idx = {c: i for i, c in enumerate("xmas")}[cat]
-    return nxt if (operator.gt if op == ">" else operator.lt)(part[idx], v) else False
+    nxt = (
+        nxt_if
+        if (operator.gt if op == ">" else operator.lt)(part[idx], v)
+        else nxt_else
+    )
+    return apply_rule(part, nxt, rules)
 
 
-def apply_rules(part, rules):
-    for r in rules:
-        if res := apply_rule(part, r):
-            return res
+rules, parts = parse()
+print(rules)
 
+# Pt 1.
+print(sum(c for p in parts for c in p if apply_rule(p, "in0", rules) == "A0"))
 
-def apply(part, wfs, name):
-    res = apply_rules(part, wfs[name])
-    if res in "AR":
-        return res
-    return apply(part, wfs, res)
-
-
-wfs, parts = parse()
-# print(wfs, parts)
-
-print(sum(c for p in parts for c in p if apply(p, wfs, "in") == "A"))
-# print([apply(p, wfs, "in") for p in parts])
+# print([apply_rule(p, "in0", rules) for p in parts[:1]])
